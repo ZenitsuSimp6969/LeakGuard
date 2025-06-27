@@ -1,0 +1,800 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2761
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;\red255\green255\blue255;\red0\green0\blue0;}
+{\*\expandedcolortbl;;\cssrgb\c100000\c100000\c100000;\cssrgb\c0\c0\c0;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\partightenfactor0
+
+\f0\fs32 \cf0 \cb2 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec3 <!DOCTYPE html>\
+<html lang="en">\
+<head>\
+\'a0 <meta charset="UTF-8" />\
+\'a0 <title>LeakGuard Dashboard</title>\
+\'a0 <!-- Include Tailwind CSS CDN for styling -->\
+\'a0 <script src="https://cdn.tailwindcss.com"></script>\
+\'a0 <!-- Font Awesome CDN for icons -->\
+\'a0 <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>\
+</head>\
+<body class="bg-gray-100 min-h-screen">\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 <div id="root"></div>\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 <!-- React and ReactDOM CDN -->\
+\'a0 <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>\
+\'a0 <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>\
+\'a0\'a0\
+\'a0 <!-- Your React component code -->\
+\'a0 <script type="text/javascript">\
+\'a0 \'a0 "use client";\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 \'a0 const \{ useState, useEffect \} = React;\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 \'a0 function MainComponent() \{\
+\'a0 \'a0 \'a0 const [activeTab, setActiveTab] = useState("dashboard");\
+\'a0 \'a0 \'a0 const [dashboardData, setDashboardData] = useState(null);\
+\'a0 \'a0 \'a0 const [usageData, setUsageData] = useState(null);\
+\'a0 \'a0 \'a0 const [alerts, setAlerts] = useState([]);\
+\'a0 \'a0 \'a0 const [settings, setSettings] = useState(\{\});\
+\'a0 \'a0 \'a0 const [loading, setLoading] = useState(true);\
+\'a0 \'a0 \'a0 const [error, setError] = useState(null);\
+\'a0 \'a0 \'a0 const [resolvingAlerts, setResolvingAlerts] = useState(new Set());\
+\'a0 \'a0 \'a0 const [loadingUsage, setLoadingUsage] = useState(false);\
+\'a0 \'a0 \'a0 const [selectedTimeframe, setSelectedTimeframe] = useState("daily");\
+\'a0 \'a0 \'a0 const [updatingSettings, setUpdatingSettings] = useState(new Set());\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 \'a0 \'a0 const formatVolume = (gallons) => \{\
+\'a0 \'a0 \'a0 \'a0 if (!gallons) return "0 L";\
+\'a0 \'a0 \'a0 \'a0 const units = settings.units || "litres";\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 \'a0 \'a0 \'a0 switch (units) \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 case "gallons":\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 return `$\{gallons.toFixed(1)\} gal`;\
+\'a0 \'a0 \'a0 \'a0 \'a0 case "cubic_feet":\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 return `$\{(gallons * 0.133681).toFixed(2)\} ft\'b3`;\
+\'a0 \'a0 \'a0 \'a0 \'a0 case "litres":\
+\'a0 \'a0 \'a0 \'a0 \'a0 default:\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 return `$\{Math.round(gallons * 3.78541)\} L`;\
+\'a0 \'a0 \'a0 \'a0 \}\
+\'a0 \'a0 \'a0 \};\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 \'a0 \'a0 useEffect(() => \{\
+\'a0 \'a0 \'a0 \'a0 loadDashboardData();\
+\'a0 \'a0 \'a0 \'a0 loadAlerts();\
+\'a0 \'a0 \'a0 \'a0 loadSettings();\
+\'a0 \'a0 \'a0 \}, []);\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 \'a0 \'a0 const loadDashboardData = async () => \{\
+\'a0 \'a0 \'a0 \'a0 try \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 const response = await fetch("/api/dashboard", \{ method: "POST" \});\
+\'a0 \'a0 \'a0 \'a0 \'a0 if (!response.ok) throw new Error("Failed to load dashboard data");\
+\'a0 \'a0 \'a0 \'a0 \'a0 const data = await response.json();\
+\'a0 \'a0 \'a0 \'a0 \'a0 setDashboardData(data);\
+\'a0 \'a0 \'a0 \'a0 \} catch (err) \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 console.error("Error loading dashboard:", err);\
+\'a0 \'a0 \'a0 \'a0 \'a0 setError("Failed to load dashboard data");\
+\'a0 \'a0 \'a0 \'a0 \}\
+\'a0 \'a0 \'a0 \};\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 \'a0 \'a0 const loadUsageData = async (timeframe = "daily") => \{\
+\'a0 \'a0 \'a0 \'a0 setLoadingUsage(true);\
+\'a0 \'a0 \'a0 \'a0 try \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 const response = await fetch("/api/usage", \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 method: "POST",\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 headers: \{ "Content-Type": "application/json" \},\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 body: JSON.stringify(\{ timeframe \}),\
+\'a0 \'a0 \'a0 \'a0 \'a0 \});\
+\'a0 \'a0 \'a0 \'a0 \'a0 if (!response.ok) throw new Error("Failed to load usage data");\
+\'a0 \'a0 \'a0 \'a0 \'a0 const data = await response.json();\
+\'a0 \'a0 \'a0 \'a0 \'a0 setUsageData(data);\
+\'a0 \'a0 \'a0 \'a0 \'a0 setSelectedTimeframe(timeframe);\
+\'a0 \'a0 \'a0 \'a0 \} catch (err) \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 console.error("Error loading usage:", err);\
+\'a0 \'a0 \'a0 \'a0 \'a0 setError("Failed to load usage data");\
+\'a0 \'a0 \'a0 \'a0 \} finally \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 setLoadingUsage(false);\
+\'a0 \'a0 \'a0 \'a0 \}\
+\'a0 \'a0 \'a0 \};\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 \'a0 \'a0 const loadAlerts = async () => \{\
+\'a0 \'a0 \'a0 \'a0 try \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 const response = await fetch("/api/alerts", \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 method: "POST",\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 headers: \{ "Content-Type": "application/json" \},\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 body: JSON.stringify(\{ action: "get" \}),\
+\'a0 \'a0 \'a0 \'a0 \'a0 \});\
+\'a0 \'a0 \'a0 \'a0 \'a0 if (!response.ok) throw new Error("Failed to load alerts");\
+\'a0 \'a0 \'a0 \'a0 \'a0 const data = await response.json();\
+\'a0 \'a0 \'a0 \'a0 \'a0 setAlerts(data.alerts || []);\
+\'a0 \'a0 \'a0 \'a0 \} catch (err) \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 console.error("Error loading alerts:", err);\
+\'a0 \'a0 \'a0 \'a0 \'a0 setError("Failed to load alerts");\
+\'a0 \'a0 \'a0 \'a0 \}\
+\'a0 \'a0 \'a0 \};\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 \'a0 \'a0 const loadSettings = async () => \{\
+\'a0 \'a0 \'a0 \'a0 try \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 const response = await fetch("/api/settings", \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 method: "POST",\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 headers: \{ "Content-Type": "application/json" \},\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 body: JSON.stringify(\{ action: "get" \}),\
+\'a0 \'a0 \'a0 \'a0 \'a0 \});\
+\'a0 \'a0 \'a0 \'a0 \'a0 if (!response.ok) throw new Error("Failed to load settings");\
+\'a0 \'a0 \'a0 \'a0 \'a0 const data = await response.json();\
+\'a0 \'a0 \'a0 \'a0 \'a0 setSettings(data.settings || \{\});\
+\'a0 \'a0 \'a0 \'a0 \'a0 setLoading(false);\
+\'a0 \'a0 \'a0 \'a0 \} catch (err) \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 console.error("Error loading settings:", err);\
+\'a0 \'a0 \'a0 \'a0 \'a0 setError("Failed to load settings");\
+\'a0 \'a0 \'a0 \'a0 \'a0 setLoading(false);\
+\'a0 \'a0 \'a0 \'a0 \}\
+\'a0 \'a0 \'a0 \};\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 \'a0 \'a0 const playClickSound = () => \{\
+\'a0 \'a0 \'a0 \'a0 try \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 const audioContext = new (window.AudioContext || window.webkitAudioContext)();\
+\'a0 \'a0 \'a0 \'a0 \'a0 const oscillator = audioContext.createOscillator();\
+\'a0 \'a0 \'a0 \'a0 \'a0 const gainNode = audioContext.createGain();\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 \'a0 \'a0 \'a0 \'a0 oscillator.connect(gainNode);\
+\'a0 \'a0 \'a0 \'a0 \'a0 gainNode.connect(audioContext.destination);\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 \'a0 \'a0 \'a0 \'a0 oscillator.frequency.setValueAtTime(800, audioContext.currentTime);\
+\'a0 \'a0 \'a0 \'a0 \'a0 oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1);\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 \'a0 \'a0 \'a0 \'a0 gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);\
+\'a0 \'a0 \'a0 \'a0 \'a0 gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 \'a0 \'a0 \'a0 \'a0 oscillator.start(audioContext.currentTime);\
+\'a0 \'a0 \'a0 \'a0 \'a0 oscillator.stop(audioContext.currentTime + 0.1);\
+\'a0 \'a0 \'a0 \'a0 \} catch (err) \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 console.log("Audio not supported");\
+\'a0 \'a0 \'a0 \'a0 \}\
+\'a0 \'a0 \'a0 \};\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 \'a0 \'a0 const resolveAlert = async (alertId) => \{\
+\'a0 \'a0 \'a0 \'a0 playClickSound();\
+\'a0 \'a0 \'a0 \'a0 setResolvingAlerts((prev) => new Set([...prev, alertId]));\
+\'a0 \'a0 \'a0 \'a0 try \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 const response = await fetch("/api/alerts", \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 method: "POST",\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 headers: \{ "Content-Type": "application/json" \},\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 body: JSON.stringify(\{ action: "resolve", alertId \}),\
+\'a0 \'a0 \'a0 \'a0 \'a0 \});\
+\'a0 \'a0 \'a0 \'a0 \'a0 if (!response.ok) throw new Error("Failed to resolve alert");\
+\'a0 \'a0 \'a0 \'a0 \'a0 loadAlerts();\
+\'a0 \'a0 \'a0 \'a0 \} catch (err) \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 console.error("Error resolving alert:", err);\
+\'a0 \'a0 \'a0 \'a0 \'a0 setError("Failed to resolve alert");\
+\'a0 \'a0 \'a0 \'a0 \} finally \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 setResolvingAlerts((prev) => \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 const newSet = new Set(prev);\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 newSet.delete(alertId);\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 return newSet;\
+\'a0 \'a0 \'a0 \'a0 \'a0 \});\
+\'a0 \'a0 \'a0 \'a0 \}\
+\'a0 \'a0 \'a0 \};\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 \'a0 \'a0 const updateSettings = async (newSettings) => \{\
+\'a0 \'a0 \'a0 \'a0 playClickSound();\
+\'a0 \'a0 \'a0 \'a0 const settingKeys = Object.keys(newSettings);\
+\'a0 \'a0 \'a0 \'a0 setUpdatingSettings((prev) => new Set([...prev, ...settingKeys]));\
+\'a0 \'a0 \'a0 \'a0 try \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 const response = await fetch("/api/settings", \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 method: "POST",\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 headers: \{ "Content-Type": "application/json" \},\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 body: JSON.stringify(\{ action: "bulk_set", settings: newSettings \}),\
+\'a0 \'a0 \'a0 \'a0 \'a0 \});\
+\'a0 \'a0 \'a0 \'a0 \'a0 if (!response.ok) throw new Error("Failed to update settings");\
+\'a0 \'a0 \'a0 \'a0 \'a0 setSettings((prev) => (\{ ...prev, ...newSettings \}));\
+\'a0 \'a0 \'a0 \'a0 \} catch (err) \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 console.error("Error updating settings:", err);\
+\'a0 \'a0 \'a0 \'a0 \'a0 setError("Failed to update settings");\
+\'a0 \'a0 \'a0 \'a0 \} finally \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 setUpdatingSettings((prev) => \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 const newSet = new Set(prev);\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 Object.keys(newSettings).forEach((key) => newSet.delete(key));\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 return newSet;\
+\'a0 \'a0 \'a0 \'a0 \'a0 \});\
+\'a0 \'a0 \'a0 \'a0 \}\
+\'a0 \'a0 \'a0 \};\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 \'a0 \'a0 useEffect(() => \{\
+\'a0 \'a0 \'a0 \'a0 if (activeTab === "usage" && !usageData) \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 loadUsageData();\
+\'a0 \'a0 \'a0 \'a0 \}\
+\'a0 \'a0 \'a0 \}, [activeTab]);\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 \'a0 \'a0 if (loading) \{\
+\'a0 \'a0 \'a0 \'a0 return (\
+\'a0 \'a0 \'a0 \'a0 \'a0 <div className="min-h-screen bg-gradient-to-br from-blue-400 via-cyan-500 to-teal-600 flex items-center justify-center px-4">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="text-center">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-white text-xl font-semibold">Loading LeakGuard...</p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 );\
+\'a0 \'a0 \'a0 \}\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 \'a0 \'a0 const renderDashboard = () => \{\
+\'a0 \'a0 \'a0 \'a0 const totalCost = Number(dashboardData?.usageSummary?.total_cost || 0);\
+\'a0 \'a0 \'a0 \'a0 return (\
+\'a0 \'a0 \'a0 \'a0 \'a0 <div className="space-y-4 pb-20">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{/* Dashboard cards */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="grid grid-cols-2 gap-3">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{/* Sensors count */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/20">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="text-center">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <i className="fas fa-tint text-blue-500 text-2xl mb-2"></i>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-gray-600 text-xs">Active Sensors</p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-xl font-bold text-blue-600">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{dashboardData?.sensors?.length || 0\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{/* Usage (30d) */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/20">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="text-center">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <i className="fas fa-chart-line text-cyan-500 text-2xl mb-2"></i>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-gray-600 text-xs">Usage (30d)</p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-xl font-bold text-cyan-600">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{formatVolume(dashboardData?.usageSummary?.total_gallons || 0)\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{/* Alerts count */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/20">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="text-center">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <i className="fas fa-exclamation-triangle text-orange-500 text-2xl mb-2"></i>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-gray-600 text-xs">Active Alerts</p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-xl font-bold text-orange-600">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{alerts.filter((a) => !a.is_resolved).length\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{/* Cost */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/20">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="text-center">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <i className="fas fa-dollar-sign text-green-500 text-2xl mb-2"></i>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-gray-600 text-xs">Monthly Cost</p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-xl font-bold text-green-600">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 $\{totalCost.toFixed(2)\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{/* Sensors list */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/20">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-center">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <i className="fas fa-broadcast-tower text-blue-500 mr-2"></i>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 Sensors\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </h3>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="space-y-3">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{dashboardData?.sensors?.map((sensor) => (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 key=\{sensor.id\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-3 border border-blue-200"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 >\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="flex items-center justify-between mb-2">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <h4 className="font-semibold text-gray-800 text-sm">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{sensor.name\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </h4>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <span\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 className=\{`px-2 py-1 rounded-full text-xs font-medium $\{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 sensor.status === "active"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ? "bg-green-100 text-green-800"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 : sensor.status === "warning"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ? "bg-yellow-100 text-yellow-800"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 : "bg-red-100 text-red-800"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \}`\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 >\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{sensor.status\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </span>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-gray-600 text-xs mb-2">\{sensor.location\}</p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="flex justify-between text-xs mb-2">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <span className="text-gray-500">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 Battery: \{sensor.battery_level\}%\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </span>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <span className="text-blue-600">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{sensor.water_flow_rate\} gal/min\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </span>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="w-full bg-gray-200 rounded-full h-2">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 className=\{`h-2 rounded-full $\{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 sensor.battery_level > 50\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ? "bg-green-500"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 : sensor.battery_level > 20\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ? "bg-yellow-500"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 : "bg-red-500"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \}`\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 style=\{\{ width: `$\{sensor.battery_level\}%` \}\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ></div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ))\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{/* Alerts list */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/20">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-center">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <i className="fas fa-bell text-orange-500 mr-2"></i>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 Recent Alerts\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </h3>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{alerts.length === 0 ? (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-gray-500 text-center py-6 text-sm">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 No alerts at this time. Your system is running smoothly!\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ) : (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="space-y-3">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{alerts.slice(0, 3).map((alert) => (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 key=\{alert.id\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 className=\{`p-3 rounded-lg border-l-4 $\{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 alert.severity === "high"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ? "bg-red-50 border-red-500"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 : alert.severity === "medium"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ? "bg-yellow-50 border-yellow-500"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 : "bg-blue-50 border-blue-500"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \}`\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 >\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="flex items-start justify-between">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="flex-1 pr-2">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="font-medium text-gray-800 text-sm">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{alert.message\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-xs text-gray-600">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{alert.sensor_name\} - \{alert.sensor_location\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-xs text-gray-500">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{new Date(alert.created_at).toLocaleString()\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{!alert.is_resolved && (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <button\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 onClick=\{() => resolveAlert(alert.id)\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 disabled=\{resolvingAlerts.has(alert.id)\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 className=\{`px-3 py-1 rounded-lg text-xs whitespace-nowrap transition-all $\{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 resolvingAlerts.has(alert.id)\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ? "bg-gray-400 text-white cursor-not-allowed"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 : "bg-green-500 text-white hover:bg-green-600 active:bg-green-700 active:scale-95"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \}`\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 >\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{resolvingAlerts.has(alert.id) ? (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <i className="fas fa-spinner fa-spin mr-1"></i>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 Resolving...\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ) : (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 "Resolve"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 )\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </button>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 )\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ))\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 )\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 );\
+\'a0 \'a0 \'a0 \};\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 \'a0 \'a0 const renderUsage = () => \{\
+\'a0 \'a0 \'a0 \'a0 const totalCost = Number(usageData?.summary?.total_cost || 0);\
+\'a0 \'a0 \'a0 \'a0 return (\
+\'a0 \'a0 \'a0 \'a0 \'a0 <div className="space-y-4 pb-20">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{/* Usage analytics */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/20">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-center">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <i className="fas fa-chart-area text-cyan-500 mr-2"></i>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 Usage Analytics\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </h3>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{/* Timeframe buttons */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="flex space-x-1 mb-4">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{["daily", "weekly", "monthly"].map((period) => (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <button\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 key=\{period\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 onClick=\{() => \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 playClickSound();\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 setSelectedTimeframe(period);\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 loadUsageData(period);\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \}\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 disabled=\{loadingUsage\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 className=\{`flex-1 px-3 py-2 rounded-lg font-medium text-sm transition-all duration-150 $\{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 selectedTimeframe === period\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ? "bg-blue-500 text-white shadow-md transform scale-95"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 : loadingUsage\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ? "bg-gray-300 text-gray-500 cursor-not-allowed"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 : "bg-gray-200 text-gray-700 hover:bg-gray-300 active:bg-gray-400 active:scale-95"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \}`\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 >\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{loadingUsage && selectedTimeframe === period ? (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <i className="fas fa-spinner fa-spin mr-1"></i>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 Loading...\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ) : (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 period.charAt(0).toUpperCase() + period.slice(1)\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 )\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </button>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ))\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{/* Usage data */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{usageData && !loadingUsage && (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="grid grid-cols-1 gap-3 mb-4">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{/* Total Usage */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="bg-gradient-to-r from-blue-100 to-cyan-100 rounded-lg p-3">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-gray-600 text-xs">Total Usage</p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-xl font-bold text-blue-600">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{formatVolume(usageData?.summary?.total_gallons || 0)\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{/* Total Cost */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="bg-gradient-to-r from-green-100 to-emerald-100 rounded-lg p-3">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-gray-600 text-xs">Total Cost</p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-xl font-bold text-green-600">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 $\{totalCost.toFixed(2)\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{/* Avg Daily */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg p-3">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-gray-600 text-xs">Avg Daily</p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-xl font-bold text-purple-600">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{formatVolume(usageData?.summary?.avg_daily_usage || 0)\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 )\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{/* Loading indicator */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{loadingUsage && (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="flex items-center justify-center py-8">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="text-center">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-gray-600 text-sm">Loading usage data...</p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 )\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{/* Top sensors */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{usageData?.topSensors && !loadingUsage && (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <h4 className="font-semibold text-gray-800 mb-3 text-sm">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 Top Usage by Location\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </h4>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="space-y-2">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{usageData.topSensors.map((sensor, index) => \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 const sensorCost = Number(sensor.total_cost || 0);\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 return (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 key=\{index\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 >\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="flex-1">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="font-medium text-gray-800 text-sm">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{sensor.name\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-xs text-gray-600">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{sensor.location\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="text-right">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="font-semibold text-blue-600 text-sm">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{formatVolume(sensor.total_gallons)\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-xs text-gray-500">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 $\{sensorCost.toFixed(2)\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 );\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \})\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 )\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 );\
+\'a0 \'a0 \'a0 \};\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 \'a0 \'a0 const renderAlerts = () => (\
+\'a0 \'a0 \'a0 \'a0 <div className="space-y-4 pb-20">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \{/* Alerts management */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/20">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-center">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <i className="fas fa-exclamation-circle text-red-500 mr-2"></i>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 Alert Management\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </h3>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{/* Alert counts */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="grid grid-cols-3 gap-2 mb-4">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{/* High */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="bg-red-50 rounded-lg p-3 border border-red-200 text-center">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-red-600 text-xs">High</p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-lg font-bold text-red-700">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 alerts.filter((a) => a.severity === "high" && !a.is_resolved)\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 .length\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{/* Medium */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="bg-yellow-50 rounded-lg p-3 border border-yellow-200 text-center">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-yellow-600 text-xs">Medium</p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-lg font-bold text-yellow-700">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 alerts.filter((a) => a.severity === "medium" && !a.is_resolved)\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 .length\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{/* Low */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="bg-blue-50 rounded-lg p-3 border border-blue-200 text-center">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-blue-600 text-xs">Low</p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-lg font-bold text-blue-700">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 alerts.filter((a) => a.severity === "low" && !a.is_resolved)\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 .length\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{/* Alerts list */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="space-y-3">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{alerts.map((alert) => (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 key=\{alert.id\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 className=\{`p-3 rounded-lg border $\{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 alert.is_resolved\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ? "bg-gray-50 border-gray-200 opacity-60"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 : alert.severity === "high"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ? "bg-red-50 border-red-200"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 : alert.severity === "medium"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ? "bg-yellow-50 border-yellow-200"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 : "bg-blue-50 border-blue-200"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \}`\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 >\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="flex items-start justify-between">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="flex-1 pr-2">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="flex items-center space-x-2 mb-1">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <span\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 className=\{`px-2 py-1 rounded-full text-xs font-medium $\{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 alert.severity === "high"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ? "bg-red-100 text-red-800"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 : alert.severity === "medium"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ? "bg-yellow-100 text-yellow-800"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 : "bg-blue-100 text-blue-800"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \}`\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 >\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{alert.severity.toUpperCase()\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </span>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{alert.is_resolved && (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 RESOLVED\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </span>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 )\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="font-medium text-gray-800 text-sm">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{alert.message\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-xs text-gray-600">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{alert.sensor_name\} - \{alert.sensor_location\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-xs text-gray-500">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{new Date(alert.created_at).toLocaleString()\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{!alert.is_resolved && (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <button\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 onClick=\{() => resolveAlert(alert.id)\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 disabled=\{resolvingAlerts.has(alert.id)\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 className=\{`px-3 py-2 rounded-lg text-xs whitespace-nowrap transition-all $\{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 resolvingAlerts.has(alert.id)\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ? "bg-gray-400 text-white cursor-not-allowed"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 : "bg-green-500 text-white hover:bg-green-600 active:bg-green-700 active:scale-95"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \}`\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 >\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{resolvingAlerts.has(alert.id) ? (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <i className="fas fa-spinner fa-spin mr-1"></i>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 Resolving...\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ) : (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <i className="fas fa-check mr-1"></i>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 Resolve\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 )\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </button>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 )\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ))\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 );\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 \'a0 \'a0 // Render the component\
+\'a0 \'a0 \'a0 return (\
+\'a0 \'a0 \'a0 \'a0 <div className="min-h-screen bg-gradient-to-br from-blue-400 via-cyan-500 to-teal-600 relative overflow-hidden">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \{/* Background decorative elements */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 <div className="absolute inset-0 overflow-hidden pointer-events-none">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="absolute top-10 left-5 w-12 h-12 bg-white/10 rounded-full animate-bounce"></div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="absolute top-32 right-5 w-8 h-8 bg-white/10 rounded-full animate-pulse"></div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 className="absolute bottom-32 left-1/4 w-6 h-6 bg-white/10 rounded-full animate-bounce"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 style=\{\{ animationDelay: "1s" \}\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ></div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 \'a0 \'a0 \'a0 \'a0 \{/* Header */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 <div className="relative z-10 bg-white/10 backdrop-blur-md border-b border-white/20">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="px-4">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="flex items-center justify-between h-14">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="flex items-center">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <i className="fas fa-shield-alt text-white text-xl mr-2"></i>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <h1 className="text-lg font-bold text-white">LeakGuard</h1>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <span className="ml-2 px-2 py-1 bg-white/20 text-white text-xs rounded-full">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 DEMO\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </span>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="flex items-center">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="text-white text-xs">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <i className="fas fa-wifi text-green-300 mr-1"></i>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 Connected\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 \'a0 \'a0 \'a0 \'a0 \{/* Main content area */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 <div className="relative z-10 px-4 py-4">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{error && (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <i className="fas fa-exclamation-triangle mr-2"></i>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{error\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <button\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 onClick=\{() => \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 playClickSound();\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 setError(null);\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \}\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 className="float-right text-red-500 hover:text-red-700"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 >\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <i className="fas fa-times"></i>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </button>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 )\}\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{activeTab === "dashboard" && renderDashboard()\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{activeTab === "usage" && renderUsage()\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{activeTab === "alerts" && renderAlerts()\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{activeTab === "settings" && renderSettings()\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 \'a0 \'a0 \'a0 \'a0 \{/* Bottom navigation */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-white/20 z-20 safe-area-pb">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="px-2">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="flex justify-around py-2">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{[\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{ id: "dashboard", icon: "fas fa-home", label: "Dashboard" \},\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{ id: "usage", icon: "fas fa-chart-line", label: "Usage" \},\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{ id: "alerts", icon: "fas fa-bell", label: "Alerts" \},\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{ id: "settings", icon: "fas fa-cog", label: "Settings" \},\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ].map((tab) => (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <button\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 key=\{tab.id\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 onClick=\{() => \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 playClickSound();\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 setActiveTab(tab.id);\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \}\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 className=\{`relative flex flex-col items-center py-2 px-3 rounded-lg transition-all $\{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 activeTab === tab.id\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ? "bg-blue-500 text-white"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 : "text-gray-600 hover:text-blue-500 hover:bg-blue-50"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \}`\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 >\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <i className=\{`$\{tab.icon\} text-lg mb-1`\}></i>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <span className="text-xs font-medium">\{tab.label\}</span>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{tab.id === "alerts" &&\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 alerts.filter((a) => !a.is_resolved).length > 0 && (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{alerts.filter((a) => !a.is_resolved).length\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </span>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 )\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </button>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ))\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 \'a0 \'a0 \'a0 \'a0 \{/* Styles */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 <style jsx global>\{`\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 @keyframes float \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 0%, 100% \{ transform: translateY(0px) rotate(0deg); \}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 50% \{ transform: translateY(-10px) rotate(180deg); \}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 .animate-float \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 animation: float 3s ease-in-out infinite;\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 .safe-area-pb \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 padding-bottom: env(safe-area-inset-bottom);\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 button \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 min-height: 44px;\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 body \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 -webkit-overflow-scrolling: touch;\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \}\
+\'a0 \'a0 \'a0 \'a0 \'a0 `\}</style>\
+\'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 );\
+\'a0 \'a0 \}\
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb2 \'a0 \'a0 // Render to root\
+\'a0 \'a0 ReactDOM.render(<MainComponent />, document.getElementById("root"));\
+\'a0 </script>\
+</body>\
+</html>\
+}
